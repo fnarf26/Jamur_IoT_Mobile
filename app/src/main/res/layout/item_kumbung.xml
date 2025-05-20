@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="4dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/blue_gradient_background">
+
+        <!-- Status indikator -->
+
+        <!-- Timestamp -->
+
+        <!-- Nama Lumbung -->
+
+        <!-- Dua panel data dengan background berbeda -->
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutLeftPanel"
+            android:layout_width="0dp"
+            android:layout_height="182dp"
+            android:background="@drawable/blue_gradient_dark"
+            android:paddingBottom="24dp"
+            app:layout_constraintEnd_toStartOf="@id/layoutRightPanel"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.5">
+
+            <!-- Suhu -->
+            <LinearLayout
+                android:id="@+id/layoutStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_marginTop="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintStart_toStartOf="@+id/ivTemperature"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <View
+                    android:id="@+id/viewStatusIndicator"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/circle_green" />
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Online"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvTimestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="12:12 11-12-2024"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="@+id/layoutStatus"
+                app:layout_constraintTop_toBottomOf="@+id/layoutStatus" />
+
+            <TextView
+                android:id="@+id/tvSuhuLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="10dp"
+                android:text="Suhu"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvTimestamp" />
+
+            <ImageView
+                android:id="@+id/ivTemperature"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="7dp"
+                android:src="@drawable/ic_temperature"
+                android:tint="@android:color/white"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvSuhuLabel" />
+
+            <TextView
+                android:id="@+id/tvTemperature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="30"
+                android:textColor="@android:color/white"
+                android:textSize="45sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/ivTemperature"
+                app:layout_constraintStart_toEndOf="@id/ivTemperature"
+                app:layout_constraintTop_toTopOf="@id/ivTemperature" />
+
+            <TextView
+                android:id="@+id/tvCelcius"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="°C"
+                android:textColor="@android:color/white"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toEndOf="@id/tvTemperature"
+                app:layout_constraintTop_toTopOf="@id/tvTemperature" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutRightPanel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="-1dp"
+            android:background="@drawable/blue_gradient_light"
+            android:paddingBottom="24dp"
+            app:layout_constraintBottom_toBottomOf="@id/layoutLeftPanel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/layoutLeftPanel"
+            app:layout_constraintTop_toTopOf="@id/layoutLeftPanel"
+            app:layout_constraintWidth_percent="0.5">
+
+            <!-- Kelembapan -->
+            <TextView
+                android:id="@+id/tvLumbungName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/rounded_white_background"
+                android:paddingStart="24dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="24dp"
+                android:paddingBottom="12dp"
+                android:text="Kumbung Lor 1"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="@+id/ivHumidity"
+                app:layout_constraintTop_toTopOf="parent" />
+            />
+
+            <TextView
+                android:id="@+id/tvKelembapanLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="15dp"
+                android:text="Kelembapan"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvLumbungName" />
+
+            <ImageView
+                android:id="@+id/ivHumidity"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="7dp"
+                android:src="@drawable/ic_humidity"
+                android:tint="@android:color/white"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvKelembapanLabel" />
+
+            <TextView
+                android:id="@+id/tvHumidity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="75"
+                android:textColor="@android:color/white"
+                android:textSize="45sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/ivHumidity"
+                app:layout_constraintStart_toEndOf="@id/ivHumidity"
+                app:layout_constraintTop_toTopOf="@id/ivHumidity" />
+
+            <TextView
+                android:id="@+id/tvPercentage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="%"
+                android:textColor="@android:color/white"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toEndOf="@id/tvHumidity"
+                app:layout_constraintTop_toTopOf="@id/tvHumidity" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Detail Button -->
+        <LinearLayout
+            android:id="@+id/layoutDetailButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/light_blue"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/layoutLeftPanel">
+
+            <TextView
+                android:id="@+id/tvDetailSensor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:layout_weight="1"
+                android:text="Detail sensor"
+                android:textColor="@android:color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/ivDetailArrow"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="15dp"
+                android:background="@drawable/circle_blue"
+                android:padding="8dp"
+                android:src="@drawable/ic_arrow_righ"
+                android:tint="@android:color/white" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

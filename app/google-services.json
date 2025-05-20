@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "316146054050",
+    "firebase_url": "https://jamur-iot-de497-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "jamur-iot-de497",
+    "storage_bucket": "jamur-iot-de497.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:316146054050:android:f25f73ce4ad78c7d2ab8fb",
+        "android_client_info": {
+          "package_name": "com.fendi.jamuriot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKcy3WPeuCOP3a0ADLwfHloXJ0VBnnGBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

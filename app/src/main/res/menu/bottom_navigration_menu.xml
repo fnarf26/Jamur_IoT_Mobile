@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/itemMonitoring"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:icon="@drawable/ic_monitoring"
+        android:title="Monitoring"
+        app:showAsAction="always|withText" />
+
+    <item
+        android:id="@+id/itemKelolaPetugas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:icon="@drawable/ic_add_petugas"
+        android:title="Kelola Petugas"
+        app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/itemKelolaPerangkat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:icon="@drawable/ic_perangkat"
+        android:title="Kelola Perangkat"
+        app:showAsAction="always|withText" />
+
+</menu>
