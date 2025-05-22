@@ -38,6 +38,14 @@ class TambahPetugasActivity : AppCompatActivity() {
         b.btnTambah.setOnClickListener {
             simpanPetugas()
         }
+
+        b.btnBack.setOnClickListener {
+            finish()
+        }
+
+        b.btnBatal.setOnClickListener {
+            finish()
+        }
     }
 
     private fun loadKumbungTerdaftar() {

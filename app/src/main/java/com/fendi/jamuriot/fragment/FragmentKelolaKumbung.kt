@@ -128,18 +128,4 @@ class FragmentKelolaKumbung : Fragment() {
             null
         }
     }
-
-    fun isDeviceOnline(lastUpdate: String): Boolean {
-        val currentTime = System.currentTimeMillis()
-        val lastUpdateDate = convertToDate(lastUpdate)
-
-        // Jika konversi sukses, hitung perbedaan waktu
-        return if (lastUpdateDate != null) {
-            val timeDifference = currentTime - lastUpdateDate.time
-            // Cek apakah perangkat masih dianggap online dalam 5 menit (300.000 ms)
-            timeDifference <= 300_000
-        } else {
-            false
-        }
-    }
 }
