@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
                 b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
                 b.frameLayout.visibility = View.VISIBLE
             }
-            R.id.itemKelolaPerangkat -> {
+            R.id.itemKelolaKumbung -> {
                 ft = supportFragmentManager.beginTransaction()
                 ft.replace(R.id.frameLayout,fkelolakumbung).commit()
                 b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))

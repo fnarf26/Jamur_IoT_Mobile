@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.fendi.jamuriot.databinding.ActivityTambahPetugasBinding
+import com.fendi.jamuriot.databinding.ItemPilihanKumbungBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
@@ -49,39 +50,13 @@ class TambahPetugasActivity : AppCompatActivity() {
                     if (isRegistered) {
                         val name = deviceSnapshot.child("name").getValue(String::class.java) ?: "Kumbung"
 
-                        val kumbungLayout = LinearLayout(this@TambahPetugasActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                setMargins(0, 16, 0, 16)
-                            }
-                            orientation = LinearLayout.VERTICAL
-                            gravity = Gravity.CENTER
-                        }
+                        // Gunakan ViewBinding untuk item_kumbung.xml
+                        val kumbungBinding = ItemPilihanKumbungBinding.inflate(layoutInflater, b.kumbungContainer, false)
 
-                        val icon = ImageView(this@TambahPetugasActivity).apply {
-                            layoutParams = LinearLayout.LayoutParams(80, 80)
-                            setImageResource(R.drawable.ic_perangkat)
-                            setColorFilter(getColor(R.color.blue_primary))
-                        }
+                        kumbungBinding.txtName.text = name
+                        kumbungBinding.checkbox.tag = deviceSnapshot.key
 
-                        val label = TextView(this@TambahPetugasActivity).apply {
-                            text = name
-                            textSize = 14f
-                            setTextColor(getColor(android.R.color.black))
-                        }
-
-                        val checkbox = CheckBox(this@TambahPetugasActivity).apply {
-                            text = ""
-                            buttonTintList = getColorStateList(R.color.blue_primary)
-                            tag = deviceSnapshot.key
-                        }
-
-                        kumbungLayout.addView(icon)
-                        kumbungLayout.addView(label)
-                        kumbungLayout.addView(checkbox)
-                        b.kumbungContainer.addView(kumbungLayout)
+                        b.kumbungContainer.addView(kumbungBinding.root)
                     }
                 }
             }
@@ -91,6 +66,8 @@ class TambahPetugasActivity : AppCompatActivity() {
             }
         })
     }
+
+
 
     private fun simpanPetugas() {
         val nama = b.etNama.text.toString().trim()
@@ -105,10 +82,10 @@ class TambahPetugasActivity : AppCompatActivity() {
         // Ambil ID kumbung yang dicentang
         val kumbungList = mutableListOf<String>()
         for (i in 0 until b.kumbungContainer.childCount) {
-            val layout = b.kumbungContainer.getChildAt(i) as LinearLayout
-            val checkbox = layout.getChildAt(2) as CheckBox
-            if (checkbox.isChecked) {
-                val kumbungId = checkbox.tag as String
+            val itemView = b.kumbungContainer.getChildAt(i)
+            val checkBox = itemView.findViewById<CheckBox>(R.id.checkbox)
+            if (checkBox.isChecked) {
+                val kumbungId = checkBox.tag as String
                 kumbungList.add(kumbungId)
             }
         }

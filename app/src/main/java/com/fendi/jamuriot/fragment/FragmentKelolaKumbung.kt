@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.fendi.jamuriot.MainActivity
 import com.fendi.jamuriot.adapter.KumbungAdapter
 import com.fendi.jamuriot.databinding.FragmentKelolaKumbungBinding
@@ -41,16 +42,16 @@ class FragmentKelolaKumbung : Fragment() {
                         if (snapshot.exists()) {
                             showRegisterDialog(imei)
                         } else {
-                            Toast.makeText(requireContext(), "Perangkat tidak ditemukan", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(thisParent, "Perangkat tidak ditemukan", Toast.LENGTH_SHORT).show()
                         }
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                        Toast.makeText(requireContext(), "Terjadi kesalahan: ${error.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(thisParent, "Terjadi kesalahan: ${error.message}", Toast.LENGTH_SHORT).show()
                     }
                 })
             } else {
-                Toast.makeText(requireContext(), "IMEI tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                Toast.makeText(thisParent, "IMEI tidak boleh kosong", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -60,10 +61,10 @@ class FragmentKelolaKumbung : Fragment() {
     }
 
     private fun showRegisterDialog(imei: String) {
-        val input = EditText(requireContext())
+        val input = EditText(thisParent)
         input.hint = "Nama perangkat"
 
-        AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(thisParent)
             .setTitle("Daftarkan Perangkat")
             .setMessage("Masukkan nama untuk perangkat dengan IMEI: $imei")
             .setView(input)
@@ -75,13 +76,13 @@ class FragmentKelolaKumbung : Fragment() {
                         "name" to name
                     )
                     dbRef.child(imei).updateChildren(updates).addOnSuccessListener {
-                        Toast.makeText(requireContext(), "Berhasil didaftarkan", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(thisParent, "Berhasil didaftarkan", Toast.LENGTH_SHORT).show()
                         loadRegisteredDevices() // Refresh data
                     }.addOnFailureListener {
-                        Toast.makeText(requireContext(), "Gagal mendaftar perangkat", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(thisParent, "Gagal mendaftar perangkat", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Nama tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(thisParent, "Nama tidak boleh kosong", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Batal", null)
@@ -102,8 +103,6 @@ class FragmentKelolaKumbung : Fragment() {
 //                            is String -> value.toLongOrNull() ?: 0L
 //                            else -> 0L
 //                        }
-
-
                         val tempAvg = deviceSnapshot.child("temperatureAverage").getValue(Double::class.java) ?: 0.0
                         val humAvg = deviceSnapshot.child("humidityAverage").getValue(Double::class.java) ?: 0.0
 
@@ -111,12 +110,12 @@ class FragmentKelolaKumbung : Fragment() {
                     }
                 }
 
-                val adapter = KumbungAdapter(requireContext(), kumbungList)
-                b.listView.adapter = adapter
+                b.rvKumbung.layoutManager = LinearLayoutManager(thisParent)
+                b.rvKumbung.adapter = KumbungAdapter(kumbungList)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(requireContext(), "Gagal memuat data: ${error.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(thisParent, "Gagal memuat data: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }

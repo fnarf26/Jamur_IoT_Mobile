@@ -31,13 +31,31 @@
 <!--        app:menu="@menu/bottom_navigration_menu"/>-->
 
 
+<!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
+<!--        android:id="@+id/bottomNavigationView"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="70dp"-->
+<!--        android:background="@color/blue_primary"-->
+
+<!--        app:elevation="0dp"-->
+<!--        app:itemIconTint="@color/nav_item_color"-->
+<!--        app:itemTextColor="@color/nav_item_color"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/frameLayout"-->
+<!--        app:menu="@menu/bottom_navigration_menu" />-->
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="70dp"
+        android:background="@color/blue_primary"
+
         app:elevation="0dp"
-        app:itemActiveIndicatorStyle="@color/black"
-        app:labelVisibilityMode="labeled"
+        app:itemActiveIndicatorStyle="@android:style/Theme.Black"
+        app:itemIconTint="@color/nav_item_color"
+        app:itemTextColor="@color/nav_item_color"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

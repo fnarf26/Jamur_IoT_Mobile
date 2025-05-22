@@ -14,14 +14,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:icon="@drawable/ic_add_petugas"
-        android:title="Kelola Petugas"
+        android:title="Petugas"
         app:showAsAction="always|withText" />
     <item
-        android:id="@+id/itemKelolaPerangkat"
+        android:id="@+id/itemKelolaKumbung"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:icon="@drawable/ic_perangkat"
-        android:title="Kelola Perangkat"
+        android:title="Kumbung"
         app:showAsAction="always|withText" />
 
 </menu>
