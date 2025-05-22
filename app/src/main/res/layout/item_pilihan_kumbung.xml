@@ -14,7 +14,7 @@
         android:id="@+id/imgIcon"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/ic_perangkat"
+        android:src="@drawable/ic_kumbung"
         android:tint="@color/blue_primary" />
 
     <TextView

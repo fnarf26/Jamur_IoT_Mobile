@@ -40,7 +40,12 @@ class FragmentKelolaKumbung : Fragment() {
                 dbRef.child(imei).addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         if (snapshot.exists()) {
-                            showRegisterDialog(imei)
+                            val isRegistered = snapshot.child("register").getValue(Boolean::class.java) ?: false
+                            if (isRegistered) {
+                                Toast.makeText(thisParent, "Perangkat sudah terdaftar", Toast.LENGTH_SHORT).show()
+                            } else {
+                                showRegisterDialog(imei)
+                            }
                         } else {
                             Toast.makeText(thisParent, "Perangkat tidak ditemukan", Toast.LENGTH_SHORT).show()
                         }
@@ -54,6 +59,7 @@ class FragmentKelolaKumbung : Fragment() {
                 Toast.makeText(thisParent, "IMEI tidak boleh kosong", Toast.LENGTH_SHORT).show()
             }
         }
+
 
         loadRegisteredDevices()
 
@@ -98,11 +104,6 @@ class FragmentKelolaKumbung : Fragment() {
                     if (register) {
                         val name = deviceSnapshot.child("name").getValue(String::class.java) ?: "-"
                         val lastUpdateSnapshot = deviceSnapshot.child("lastUpdate").getValue(String::class.java) ?: "-"
-//                        val lastUpdate = when (val value = lastUpdateSnapshot.value) {
-//                            is Long -> value
-//                            is String -> value.toLongOrNull() ?: 0L
-//                            else -> 0L
-//                        }
                         val tempAvg = deviceSnapshot.child("temperatureAverage").getValue(Double::class.java) ?: 0.0
                         val humAvg = deviceSnapshot.child("humidityAverage").getValue(Double::class.java) ?: 0.0
 
@@ -118,14 +119,5 @@ class FragmentKelolaKumbung : Fragment() {
                 Toast.makeText(thisParent, "Gagal memuat data: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
-    }
-
-    fun convertToDate(dateString: String): Date? {
-        val format = SimpleDateFormat("d/M/yyyy HH.mm.ss", Locale.getDefault())
-        return try {
-            format.parse(dateString)
-        } catch (e: Exception) {
-            null
-        }
     }
 }

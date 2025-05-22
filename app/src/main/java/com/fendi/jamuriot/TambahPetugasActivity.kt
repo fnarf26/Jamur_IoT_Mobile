@@ -1,71 +1,120 @@
 package com.fendi.jamuriot
 
 import android.os.Bundle
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.ViewGroup
 import android.widget.CheckBox
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.fendi.jamuriot.databinding.ActivityTambahPetugasBinding
 import com.fendi.jamuriot.databinding.ItemPilihanKumbungBinding
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
 
 class TambahPetugasActivity : AppCompatActivity() {
-
-    private lateinit var b: ActivityTambahPetugasBinding
-    private lateinit var auth: FirebaseAuth
-    private lateinit var firestore: FirebaseFirestore
+    private lateinit var binding: ActivityTambahPetugasBinding
     private lateinit var dbRef: DatabaseReference
+    private val db = FirebaseFirestore.getInstance()
+    private val checkboxMap = mutableMapOf<String, CheckBox>()
+    private var kumbungTerpilih: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        b = ActivityTambahPetugasBinding.inflate(layoutInflater)
-        setContentView(b.root)
+        binding = ActivityTambahPetugasBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        auth = FirebaseAuth.getInstance()
-        firestore = FirebaseFirestore.getInstance()
         dbRef = FirebaseDatabase.getInstance().getReference("devices")
 
-        loadKumbungTerdaftar()
+        val mode = intent.getStringExtra("mode") ?: "tambah"
+        val email = intent.getStringExtra("email") ?: ""
+        val nama = intent.getStringExtra("nama") ?: ""
+        val role = intent.getStringExtra("role") ?: "petugas"
 
-        b.btnTambah.setOnClickListener {
-            simpanPetugas()
+        if (mode == "edit") {
+            binding.etEmail.setText(email)
+            binding.etNama.setText(nama)
+            binding.etEmail.isEnabled = false
+            binding.etNama.isEnabled = false
+            binding.tvFormPetugas.setText("Edit Petugas")
+
+            // Ambil data kumbung dari Firestore
+            db.collection("users").document(email).get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        kumbungTerpilih = document.get("kumbung") as? List<String> ?: emptyList()
+                    }
+                    loadKumbungTerdaftar(kumbungTerpilih)
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Gagal memuat data pengguna", Toast.LENGTH_SHORT).show()
+                    loadKumbungTerdaftar(emptyList())
+                }
+        } else {
+            loadKumbungTerdaftar(emptyList())
         }
 
-        b.btnBack.setOnClickListener {
+        binding.btnTambah.setOnClickListener {
+            val selectedKumbung = ambilCheckboxTercentang()
+
+            if (mode == "edit") {
+                db.collection("users").document(email)
+                    .update("kumbung", selectedKumbung)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Berhasil update kumbung", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Gagal update", Toast.LENGTH_SHORT).show()
+                    }
+            } else {
+                val newUser = hashMapOf(
+                    "nama" to nama,
+                    "role" to role,
+                    "kumbung" to selectedKumbung
+                )
+                db.collection("users").document(email)
+                    .set(newUser)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Petugas ditambahkan", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Gagal menambahkan", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        }
+
+        binding.btnBack.setOnClickListener {
             finish()
         }
 
-        b.btnBatal.setOnClickListener {
+        binding.btnBatal.setOnClickListener {
             finish()
         }
     }
 
-    private fun loadKumbungTerdaftar() {
+    private fun loadKumbungTerdaftar(selected: List<String>) {
         dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                b.kumbungContainer.removeAllViews()
+                binding.kumbungContainer.removeAllViews()
+                checkboxMap.clear()
 
                 for (deviceSnapshot in snapshot.children) {
+                    val deviceId = deviceSnapshot.key ?: continue
                     val isRegistered = deviceSnapshot.child("register").getValue(Boolean::class.java) ?: false
                     if (isRegistered) {
                         val name = deviceSnapshot.child("name").getValue(String::class.java) ?: "Kumbung"
 
-                        // Gunakan ViewBinding untuk item_kumbung.xml
-                        val kumbungBinding = ItemPilihanKumbungBinding.inflate(layoutInflater, b.kumbungContainer, false)
-
+                        val kumbungBinding = ItemPilihanKumbungBinding.inflate(layoutInflater, binding.kumbungContainer, false)
                         kumbungBinding.txtName.text = name
-                        kumbungBinding.checkbox.tag = deviceSnapshot.key
+                        kumbungBinding.checkbox.tag = deviceId
+                        kumbungBinding.checkbox.isChecked = selected.contains(deviceId)
 
-                        b.kumbungContainer.addView(kumbungBinding.root)
+                        binding.kumbungContainer.addView(kumbungBinding.root)
+                        checkboxMap[deviceId] = kumbungBinding.checkbox
                     }
+                }
+
+                if (checkboxMap.isEmpty()) {
+                    Toast.makeText(this@TambahPetugasActivity, "Tidak ada kumbung terdaftar", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -76,48 +125,7 @@ class TambahPetugasActivity : AppCompatActivity() {
     }
 
 
-
-    private fun simpanPetugas() {
-        val nama = b.etNama.text.toString().trim()
-        val email = b.etEmail.text.toString().trim()
-        val password = "123456"
-
-        if (nama.isEmpty() || email.isEmpty()) {
-            Toast.makeText(this, "Nama dan Email harus diisi", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Ambil ID kumbung yang dicentang
-        val kumbungList = mutableListOf<String>()
-        for (i in 0 until b.kumbungContainer.childCount) {
-            val itemView = b.kumbungContainer.getChildAt(i)
-            val checkBox = itemView.findViewById<CheckBox>(R.id.checkbox)
-            if (checkBox.isChecked) {
-                val kumbungId = checkBox.tag as String
-                kumbungList.add(kumbungId)
-            }
-        }
-
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener {
-                val userMap = hashMapOf(
-                    "nama" to nama,
-                    "role" to "petugas",
-                    "kumbung" to kumbungList
-                )
-
-                firestore.collection("users").document(email).set(userMap)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Petugas berhasil ditambahkan", Toast.LENGTH_SHORT).show()
-                        finish()
-                    }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(this, "Gagal menyimpan data: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal membuat akun: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+    private fun ambilCheckboxTercentang(): List<String> {
+        return checkboxMap.filter { it.value.isChecked }.map { it.key }
     }
-
 }

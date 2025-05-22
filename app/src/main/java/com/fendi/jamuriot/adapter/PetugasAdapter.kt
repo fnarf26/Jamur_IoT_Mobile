@@ -12,7 +12,7 @@ import com.fendi.jamuriot.model.PetugasData
 
 class PetugasAdapter (
     private val staffList: List<PetugasData>,
-//    private val onDeleteClick: (PetugasData) -> Unit
+    private val onItemClick: (PetugasData) -> Unit
 ) : RecyclerView.Adapter<PetugasAdapter.PetugasViewHolder>() {
 
     inner class PetugasViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -35,13 +35,19 @@ class PetugasAdapter (
         holder.tvRole.text = staff.role
         holder.tvEmail.text = staff.email
 
-        holder.ivDelete.setOnClickListener {
-//            onDeleteClick(staff)
+        // Item klik: kirim data ke fungsi callback
+        holder.itemView.setOnClickListener {
+            onItemClick(staff)
         }
 
-        // Opsional: bisa tambahkan klik untuk panah jika diperlukan
+        // Panah klik (opsional)
         holder.ivArrow.setOnClickListener {
-            Toast.makeText(holder.itemView.context, "Detail ${staff.name}", Toast.LENGTH_SHORT).show()
+//            onItemClick(staff) // bisa juga pakai Toast jika hanya ingin menampilkan detail
+        }
+
+        // Tombol hapus (implementasi jika dibutuhkan)
+        holder.ivDelete.setOnClickListener {
+            // Tambahkan fungsi onDeleteClick jika diperlukan
         }
     }
 

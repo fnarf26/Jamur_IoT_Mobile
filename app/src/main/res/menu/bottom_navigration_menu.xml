@@ -20,7 +20,7 @@
         android:id="@+id/itemKelolaKumbung"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:icon="@drawable/ic_perangkat"
+        android:icon="@drawable/ic_kumbung"
         android:title="Kumbung"
         app:showAsAction="always|withText" />
 

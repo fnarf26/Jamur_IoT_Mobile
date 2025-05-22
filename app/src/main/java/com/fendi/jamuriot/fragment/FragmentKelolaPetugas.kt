@@ -42,7 +42,16 @@ class FragmentKelolaPetugas : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = PetugasAdapter(petugasList)
+        adapter = PetugasAdapter(petugasList) { petugas ->
+            val intent = Intent(requireContext(), TambahPetugasActivity::class.java).apply {
+                putExtra("mode", "edit") // <--- MODE TAMBAHAN
+                putExtra("email", petugas.email)
+                putExtra("nama", petugas.name)
+                putExtra("role", petugas.role)
+                putStringArrayListExtra("kumbung", ArrayList(petugas.kumbung))
+            }
+            startActivity(intent)
+        }
         b.rvStaffList.layoutManager = LinearLayoutManager(requireContext())
         b.rvStaffList.adapter = adapter
     }
