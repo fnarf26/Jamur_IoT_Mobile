@@ -14,14 +14,6 @@
         android:layout_height="wrap_content"
         android:background="@drawable/blue_gradient_background">
 
-        <!-- Status indikator -->
-
-        <!-- Timestamp -->
-
-        <!-- Nama Lumbung -->
-
-        <!-- Dua panel data dengan background berbeda -->
-
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutLeftPanel"
             android:layout_width="0dp"

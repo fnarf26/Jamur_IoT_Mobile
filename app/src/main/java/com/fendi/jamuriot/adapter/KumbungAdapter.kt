@@ -10,7 +10,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class KumbungAdapter(
-    private val list: List<KumbungData>
+    private val list: MutableList<KumbungData>,
+    private val onItemDeleted: (KumbungData) -> Unit
 ) : RecyclerView.Adapter<KumbungAdapter.KumbungViewHolder>() {
 
     inner class KumbungViewHolder(val binding: ItemKumbungBinding) :
@@ -27,7 +28,12 @@ class KumbungAdapter(
         val inputFormat = SimpleDateFormat("dd/M/yyyy HH.mm.ss", Locale.getDefault())
         val outputFormat = SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault())
 
-        val date = inputFormat.parse(data.lastUpdate)
+        val date = try {
+            inputFormat.parse(data.lastUpdate)
+        } catch (e: Exception) {
+            null
+        }
+
         val lastUpdateText = date?.let { outputFormat.format(it) } ?: "Format salah"
 
         with(holder.binding) {
@@ -48,4 +54,17 @@ class KumbungAdapter(
     }
 
     override fun getItemCount(): Int = list.size
+
+    fun deleteItem(position: Int) {
+        if (position in list.indices) {
+            val item = list[position]
+            list.removeAt(position)
+            notifyItemRemoved(position)
+            onItemDeleted(item)
+        }
+    }
+
+    fun getItemAt(position: Int): KumbungData? {
+        return list.getOrNull(position)
+    }
 }

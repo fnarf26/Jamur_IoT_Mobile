@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.fendi.jamuriot.MainActivity
 import com.fendi.jamuriot.adapter.KumbungAdapter
 import com.fendi.jamuriot.databinding.FragmentKelolaKumbungBinding
@@ -111,8 +113,53 @@ class FragmentKelolaKumbung : Fragment() {
                     }
                 }
 
+                val adapter = KumbungAdapter(kumbungList.toMutableList()) { deletedData ->
+                    // Hapus dari Firebase
+                    dbRef.orderByChild("name").equalTo(deletedData.name).addListenerForSingleValueEvent(object :
+                        ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            for (item in snapshot.children) {
+                                item.ref.removeValue()
+                            }
+                            Toast.makeText(thisParent, "${deletedData.name} dihapus", Toast.LENGTH_SHORT).show()
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Toast.makeText(thisParent, "Gagal menghapus: ${error.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    })
+                }
+
                 b.rvKumbung.layoutManager = LinearLayoutManager(thisParent)
-                b.rvKumbung.adapter = KumbungAdapter(kumbungList)
+                b.rvKumbung.adapter = adapter
+
+                // Tambahkan swipe hanya ke kiri dengan konfirmasi dialog
+                val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+                    override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean = false
+
+                    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                        val position = viewHolder.adapterPosition
+                        val item = adapter.getItemAt(position)
+
+                        if (item != null) {
+                            // Tampilkan dialog konfirmasi
+                            AlertDialog.Builder(thisParent).apply {
+                                setTitle("Konfirmasi Hapus")
+                                setMessage("Apakah Anda yakin ingin menghapus kumbung \"${item.name}\"?")
+                                setPositiveButton("Hapus") { _, _ ->
+                                    adapter.deleteItem(position)
+                                }
+                                setNegativeButton("Batal") { dialog, _ ->
+                                    dialog.dismiss()
+                                    adapter.notifyItemChanged(position) // Kembalikan posisi semula
+                                }
+                                setCancelable(false)
+                                show()
+                            }
+                        }
+                    }
+                })
+                itemTouchHelper.attachToRecyclerView(b.rvKumbung)
             }
 
             override fun onCancelled(error: DatabaseError) {
