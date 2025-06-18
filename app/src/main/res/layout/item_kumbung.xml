@@ -69,7 +69,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="30dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="20dp"
                 android:text="Suhu"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
@@ -120,44 +120,77 @@
             android:layout_height="0dp"
             android:layout_marginStart="-1dp"
             android:background="@drawable/blue_gradient_light"
-            android:paddingBottom="24dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutLeftPanel"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/layoutLeftPanel"
             app:layout_constraintTop_toTopOf="@id/layoutLeftPanel"
             app:layout_constraintWidth_percent="0.5">
 
-            <!-- Kelembapan -->
-            <TextView
-                android:id="@+id/tvLumbungName"
+<!--            &lt;!&ndash; Kelembapan &ndash;&gt;-->
+<!--            <TextView-->
+<!--                android:id="@+id/tvLumbungName"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="16dp"-->
+<!--                android:background="@drawable/rounded_white_background"-->
+<!--                android:paddingStart="24dp"-->
+<!--                android:paddingTop="10dp"-->
+<!--                android:paddingEnd="24dp"-->
+<!--                android:paddingBottom="12dp"-->
+<!--                android:text="Kumbung Lor 1"-->
+<!--                android:textColor="@android:color/black"-->
+<!--                android:textSize="16sp"-->
+<!--                android:textStyle="bold"-->
+<!--                app:layout_constraintStart_toStartOf="@+id/ivHumidity"-->
+<!--                app:layout_constraintTop_toTopOf="parent" />-->
+
+            <LinearLayout
+                android:id="@+id/layoutKumbungInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/rounded_white_background"
                 android:paddingStart="24dp"
                 android:paddingTop="10dp"
                 android:paddingEnd="24dp"
                 android:paddingBottom="12dp"
-                android:text="Kumbung Lor 1"
-                android:textColor="@android:color/black"
-                android:textSize="16sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="@+id/ivHumidity"
-                app:layout_constraintTop_toTopOf="parent" />
-            />
+                app:layout_constraintTop_toTopOf="parent">
+                <!-- IMEI Kumbung -->
+                <TextView
+                    android:id="@+id/tvLumbungIMEI"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="100000001"
+                    android:textColor="@android:color/black"
+                    android:textSize="14sp" />
+
+                <!-- Nama Kumbung -->
+                <TextView
+                    android:id="@+id/tvLumbungName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kumbung Lor 1"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvKelembapanLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="30dp"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="5dp"
                 android:text="Kelembapan"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tvLumbungName" />
+                app:layout_constraintTop_toBottomOf="@+id/layoutKumbungInfo" />
 
             <ImageView
                 android:id="@+id/ivHumidity"

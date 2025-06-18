@@ -126,7 +126,6 @@
                 app:layout_constraintTop_toBottomOf="@id/tvEmailLabel" />
 
             <!-- Pilih Penugasan Kumbung -->
-            <!-- Pilih Penugasan Kumbung -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvPenugasan"
                 android:layout_width="0dp"
@@ -168,16 +167,31 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Button Container -->
-            <LinearLayout
+            <!-- Add this to activity_tambah_petugas.xml -->
+
+            <ProgressBar
+                android:id="@+id/progressBar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="@+id/cvPenugasan"
+                app:layout_constraintStart_toStartOf="@+id/cvPenugasan"
+                app:layout_constraintTop_toBottomOf="@+id/cvPenugasan" />
+
+            <!-- Button Container -->
+
+            <LinearLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:orientation="horizontal"
                 android:weightSum="2"
                 app:layout_constraintEnd_toEndOf="@+id/cvPenugasan"
                 app:layout_constraintStart_toStartOf="@+id/cvPenugasan"
-                app:layout_constraintTop_toBottomOf="@id/cvPenugasan">
+                app:layout_constraintTop_toBottomOf="@+id/progressBar">
 
                 <Button
                     android:id="@+id/btnTambah"
@@ -204,7 +218,9 @@
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+
             </LinearLayout>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

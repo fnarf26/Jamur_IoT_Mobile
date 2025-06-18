@@ -12,7 +12,8 @@ import com.fendi.jamuriot.model.PetugasData
 
 class PetugasAdapter (
     private val staffList: List<PetugasData>,
-    private val onItemClick: (PetugasData) -> Unit
+    private val onItemClick: (PetugasData) -> Unit,
+    private val onDeleteClick: (PetugasData) -> Unit // Add delete callback
 ) : RecyclerView.Adapter<PetugasAdapter.PetugasViewHolder>() {
 
     inner class PetugasViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -40,14 +41,14 @@ class PetugasAdapter (
             onItemClick(staff)
         }
 
-        // Panah klik (opsional)
+        // Arrow click (optional)
         holder.ivArrow.setOnClickListener {
-//            onItemClick(staff) // bisa juga pakai Toast jika hanya ingin menampilkan detail
+            onItemClick(staff)
         }
 
-        // Tombol hapus (implementasi jika dibutuhkan)
+        // Delete button click
         holder.ivDelete.setOnClickListener {
-            // Tambahkan fungsi onDeleteClick jika diperlukan
+            onDeleteClick(staff)
         }
     }
 

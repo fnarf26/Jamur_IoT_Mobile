@@ -23,5 +23,12 @@
         android:icon="@drawable/ic_kumbung"
         android:title="Kumbung"
         app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/itemPengaturan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:icon="@drawable/ic_setting"
+        android:title="Kumbung"
+        app:showAsAction="always|withText" />
 
 </menu>

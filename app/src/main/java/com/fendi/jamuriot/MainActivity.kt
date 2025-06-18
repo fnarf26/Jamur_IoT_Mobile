@@ -1,16 +1,31 @@
 package com.fendi.jamuriot
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
 import com.fendi.jamuriot.databinding.ActivityMainBinding
 import com.fendi.jamuriot.fragment.FragmentKelolaPetugas
 import com.fendi.jamuriot.fragment.FragmentKelolaKumbung
 import com.fendi.jamuriot.fragment.FragmentMonitoringAdmin
+import com.fendi.jamuriot.fragment.FragmentPengaturan
 import com.google.android.material.navigation.NavigationBarView
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 
 
 class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListener{
@@ -19,70 +34,143 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
     lateinit var fmonitoringadmin : FragmentMonitoringAdmin
     lateinit var fkelolakumbung: FragmentKelolaKumbung
     lateinit var fkelolapetugas: FragmentKelolaPetugas
+    lateinit var fpengaturan: FragmentPengaturan
     lateinit var ft : FragmentTransaction
+    private var userRole: String = "admin" // Default role
+    private val TAG = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Cek apakah pengguna sudah login
-//        val currentUser = auth.currentUser
-//        if (currentUser == null) {
-//            // Jika belum login, arahkan ke LoginActivity
-//            val intent = Intent(this, LoginActivity::class.java)
-//            startActivity(intent)
-//            finish() // Tutup MainActivity
-//            return
-//        }else{
-//            // Subscribe to Firebase topic
-//            Firebase.messaging.subscribeToTopic(topic).addOnCompleteListener { task ->
-//                val message = if (task.isSuccessful) {
-//                    "Subscribed to $topic"
-//                } else {
-//                    "Failed to subscribe to topic"
-//                }
-//            }
-//        }
-
-
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
-        b.bottomNavigationView.setOnItemSelectedListener(this)
-
+        
+        // Get user role from SharedPreferences
+        val prefs = getSharedPreferences("user", Context.MODE_PRIVATE)
+        userRole = prefs.getString("role", "admin") ?: "admin"
+        
+        // Setup FCM topic subscriptions based on role
+        setupFcmTopics()
+        
+        // Set up navigation and hide Kelola Petugas if user is petugas
+        setupNavigation()
+        
         fmonitoringadmin = FragmentMonitoringAdmin()
         fkelolakumbung = FragmentKelolaKumbung()
         fkelolapetugas = FragmentKelolaPetugas()
+        fpengaturan = FragmentPengaturan()
 
         ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.frameLayout,fmonitoringadmin).commit()
         b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
         b.frameLayout.visibility = View.VISIBLE
     }
-
-//    override fun onStart() {
-//        super.onStart()
-//        db = FirebaseDatabase.getInstance().getReference("device/10000000001")
-//        db.addValueEventListener(object : ValueEventListener {
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                Log.d("FirebaseDebug", "DataSnapshot exists: ${snapshot.exists()}")  // Check if snapshot exists
-//                if (snapshot.exists()) {
-//                    val profile = snapshot.child("profile")
-//                    val name = profile.child("name").getValue(String::class.java)
-//                    Log.d("FirebaseDebug", "Profile name: $name")  // Log the profile name
-//                    val status = profile.child("status").getValue(String::class.java)
-//                    Log.d("FirebaseDebug", "Profile status: $status")  // Log the profile status
-//                    // Update UI here
-//                } else {
-//                    Log.d("FirebaseDebug", "No data found in the snapshot.")
-//                    Toast.makeText(this@MainActivity, "No data available", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onCancelled(error: DatabaseError) {
-//                Log.d("FirebaseDebug", "Database error: ${error.message}")  // Log the error message
-//                Toast.makeText(this@MainActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
+    
+    private fun setupFcmTopics() {
+        Log.d(TAG, "Setting up FCM topics for role: $userRole")
+        
+        // First unsubscribe from all possible topics to prevent duplicate subscriptions
+        FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d(TAG, "Unsubscribed from all_devices topic")
+                }
+            }
+        
+        // If admin - subscribe to all devices topic
+        if (userRole == "admin") {
+            // Admin subscribes to all device notifications
+            FirebaseMessaging.getInstance().subscribeToTopic("all_devices")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d(TAG, "Admin successfully subscribed to all_devices topic")
+                    } else {
+                        Log.e(TAG, "Failed to subscribe to all_devices topic", task.exception)
+                    }
+                }
+                
+            // Additionally, subscribe admin to all registered device topics
+            subscribeAdminToAllDevices()
+            
+        } else if (userRole == "petugas") {
+            // Petugas should only subscribe to their assigned kumbung topics
+            val email = getSharedPreferences("user", Context.MODE_PRIVATE).getString("email", "") ?: ""
+            
+            // First get assigned kumbungs from Firestore
+            FirebaseFirestore.getInstance().collection("users").document(email).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        // Get the assigned kumbung IDs
+                        @Suppress("UNCHECKED_CAST")
+                        val assignedKumbungs = document.get("kumbung") as? List<String> ?: emptyList()
+                        Log.d(TAG, "Found ${assignedKumbungs.size} assigned kumbungs for petugas: $assignedKumbungs")
+                        
+                        // Subscribe to each assigned kumbung's topic
+                        assignedKumbungs.forEach { kumbungId ->
+                            val topic = "kumbung_$kumbungId"
+                            FirebaseMessaging.getInstance().subscribeToTopic(topic)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Log.d(TAG, "Petugas successfully subscribed to $topic")
+                                    } else {
+                                        Log.e(TAG, "Failed to subscribe to $topic", task.exception)
+                                    }
+                                }
+                        }
+                        
+                        // Save assigned kumbungs to SharedPreferences for future reference
+                        getSharedPreferences("user", Context.MODE_PRIVATE).edit()
+                            .putString("assigned_kumbungs", assignedKumbungs.joinToString(","))
+                            .apply()
+                    } else {
+                        Log.d(TAG, "No user document found for email: $email")
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error fetching assigned kumbungs", e)
+                }
+        }
+    }
+    
+    private fun subscribeAdminToAllDevices() {
+        // Get reference to all registered devices in Firebase Realtime Database
+        val dbRef = FirebaseDatabase.getInstance().getReference("devices")
+        
+        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (deviceSnapshot in snapshot.children) {
+                    val deviceId = deviceSnapshot.key ?: continue
+                    val isRegistered = deviceSnapshot.child("register").getValue(Boolean::class.java) ?: false
+                    
+                    if (isRegistered) {
+                        val topic = "device_$deviceId"
+                        FirebaseMessaging.getInstance().subscribeToTopic(topic)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    Log.d(TAG, "Admin successfully subscribed to $topic")
+                                } else {
+                                    Log.e(TAG, "Failed to subscribe to $topic", task.exception)
+                                }
+                            }
+                    }
+                }
+            }
+            
+            override fun onCancelled(error: DatabaseError) {
+                Log.e(TAG, "Error loading device data: ${error.message}")
+            }
+        })
+    }
+    
+    private fun setupNavigation() {
+        b.bottomNavigationView.setOnItemSelectedListener(this)
+        
+        // Hide Kelola Petugas menu item for petugas role
+        if (userRole == "petugas") {
+            val menu = b.bottomNavigationView.menu
+            menu.findItem(R.id.itemKelolaPetugas)?.isVisible = false
+        }
+    }
 
     override fun onNavigationItemSelected(p0: MenuItem): Boolean {
         when(p0.itemId){
@@ -99,78 +187,56 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
                 b.frameLayout.visibility = View.VISIBLE
             }
             R.id.itemKelolaPetugas -> {
-            ft = supportFragmentManager.beginTransaction()
-            ft.replace(R.id.frameLayout,fkelolapetugas).commit()
-            b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
-            b.frameLayout.visibility = View.VISIBLE
-        }
-//            R.id.itemHistory -> {
-//                ft = supportFragmentManager.beginTransaction()
-//                ft.replace(R.id.frameLayout,fhistory).commit()
-//                b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
-//                b.frameLayout.visibility = View.VISIBLE
-//            }
-//            R.id.itemHistory -> replaceFragment("https://pkl.supala.fun/historyPakan")
-//
-//            R.id.itemProgres -> {
-//                ft = supportFragmentManager.beginTransaction()
-//                ft.replace(R.id.frameLayout,fprogres).commit()
-//                b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
-//                b.frameLayout.visibility = View.VISIBLE
-//            }
-//            R.id.itemSetting -> {
-//                ft = supportFragmentManager.beginTransaction()
-//                ft.replace(R.id.frameLayout,fsetting).commit()
-//                b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
-//                b.frameLayout.visibility = View.VISIBLE
-//            }
+                // Add extra security check in case someone bypasses the UI
+                if (userRole != "petugas") {
+                    ft = supportFragmentManager.beginTransaction()
+                    ft.replace(R.id.frameLayout,fkelolapetugas).commit()
+                    b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
+                    b.frameLayout.visibility = View.VISIBLE
+                } else {
+                    // If somehow a petugas tries to access this, redirect to monitoring
+                    b.bottomNavigationView.selectedItemId = R.id.itemMonitoring
+                    return false
+                }
+            }
+            R.id.itemPengaturan -> {
+                ft = supportFragmentManager.beginTransaction()
+                ft.replace(R.id.frameLayout,fpengaturan).commit()
+                b.frameLayout.setBackgroundColor(Color.argb(255,255,255,255))
+                b.frameLayout.visibility = View.VISIBLE
+            }
         }
         return true
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Memeriksa izin untuk notifikasi hanya di Android 13 dan lebih baru
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                // Jika izin belum diberikan, minta izin
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    1
+                )
+            }
+        }
+    }
 
-//    fun replaceFragment(url: String) {
-//        GlobalVariables.url = url
-//        b.frameLayout.visibility = View.GONE
-//        ft = supportFragmentManager.beginTransaction()
-//        ft.remove(fhistory).commitNow()
-//        ft = supportFragmentManager.beginTransaction()
-//        ft.replace(R.id.frameLayout, fhistory).commit()
-//        b.frameLayout.visibility = View.VISIBLE
-//    }
-//
-//    override fun onResume() {
-//        super.onResume()
-//
-//        // Fetch Firebase token and set it to edit text
-////        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-////            if (task.isSuccessful) {
-////                Toast.makeText(this, task.result, Toast.LENGTH_LONG).show()
-////            }
-////        }
-//
-//        // Try to get extras from the intent
-//        try {
-//            bundle = intent.extras
-//        } catch (e: Exception) {
-//            Log.e("BUNDLE", "Bundle is null", e)
-//        }
-//
-//        // Handle bundle data if available
-//        bundle?.let {
-//            type = it.getInt("type")
-//            when (type) {
-//                0 -> {
-////                    binding.edPromoId.setText(it.getString("promoId"))
-////                    binding.edPromo.setText(it.getString("promo"))
-////                    binding.edPromoUntil.setText(it.getString("promoUntil"))
-//                }
-//                1 -> {
-////                    binding.edTitle.setText(it.getString("title"))
-////                    binding.edBody.setText(it.getString("body"))
-//                    Toast.makeText(this, it.getString("body"), Toast.LENGTH_LONG).show()
-//                }
-//            }
-//        }
-//    }
+    // Menangani hasil dari permintaan izin
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 1) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Izin diterima, Anda bisa menampilkan notifikasi
+                Toast.makeText(this, "Izin notifikasi diterima!", Toast.LENGTH_SHORT).show()
+            } else {
+                // Izin ditolak, beri tahu pengguna
+                Toast.makeText(this, "Izin notifikasi ditolak.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, " Aplikasi tidak dapat menampilkan notifikasi.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 }

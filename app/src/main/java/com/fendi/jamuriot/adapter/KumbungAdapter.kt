@@ -1,5 +1,6 @@
 package com.fendi.jamuriot.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -11,8 +12,14 @@ import java.util.*
 
 class KumbungAdapter(
     private val list: MutableList<KumbungData>,
-    private val onItemDeleted: (KumbungData) -> Unit
+    private val onItemDeleted: (KumbungData) -> Unit,
+    private val onItemClicked: (String) -> Unit, // Add click listener for device ID
+    private val isAdmin: Boolean = false, // Add admin flag with default value
+    private val context: Context? = null  // Add optional context parameter
 ) : RecyclerView.Adapter<KumbungAdapter.KumbungViewHolder>() {
+
+    // Map to store device IDs corresponding to names
+    private val deviceIds = mutableMapOf<String, String>()
 
     inner class KumbungViewHolder(val binding: ItemKumbungBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -25,8 +32,8 @@ class KumbungAdapter(
     override fun onBindViewHolder(holder: KumbungViewHolder, position: Int) {
         val data = list[position]
 
-        val inputFormat = SimpleDateFormat("dd/M/yyyy HH.mm.ss", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault())
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("HH:mm:ss dd-MM-yyyy", Locale.getDefault())
 
         val date = try {
             inputFormat.parse(data.lastUpdate)
@@ -38,6 +45,7 @@ class KumbungAdapter(
 
         with(holder.binding) {
             tvTimestamp.text = lastUpdateText
+            tvLumbungIMEI.text = data.imei
             tvLumbungName.text = data.name
             tvTemperature.text = data.temperatureAverage.toInt().toString()
             tvHumidity.text = data.humidityAverage.toInt().toString()
@@ -48,23 +56,71 @@ class KumbungAdapter(
 
             tvStatus.text = if (isOnline) "Online" else "Offline"
             viewStatusIndicator.setBackgroundResource(
-                if (isOnline) R.drawable.circle_green else R.drawable.circle_blue
+                if (isOnline) R.drawable.circle_green else R.drawable.circle_red
             )
+
+            // Set click listener on the root layout or on a specific button
+            layoutDetailButton.setOnClickListener {
+                deviceIds[data.name]?.let { deviceId ->
+                    onItemClicked(deviceId)
+                }
+            }
+
+            // Alternative: Set click listener on the entire item
+            root.setOnClickListener {
+                deviceIds[data.name]?.let { deviceId ->
+                    onItemClicked(deviceId)
+                }
+            }
         }
     }
 
     override fun getItemCount(): Int = list.size
 
+    // Add method to check deletion permission
+    fun canDelete(): Boolean {
+        return isAdmin
+    }
+
     fun deleteItem(position: Int) {
-        if (position in list.indices) {
-            val item = list[position]
-            list.removeAt(position)
-            notifyItemRemoved(position)
-            onItemDeleted(item)
+        // Check if position is valid and user is admin
+        if (position in list.indices && isAdmin) {
+            // Double-check admin status if context is available
+            if (context != null) {
+                val prefs = context.getSharedPreferences("user", Context.MODE_PRIVATE)
+                val currentRole = prefs.getString("role", "")
+
+                // Only delete if still admin
+                if (currentRole == "admin") {
+                    val item = list[position]
+                    list.removeAt(position)
+                    notifyItemRemoved(position)
+                    onItemDeleted(item)
+                } else {
+                    // Role changed, refresh the item
+                    notifyItemChanged(position)
+                }
+            } else {
+                // No context available, use the isAdmin flag only
+                val item = list[position]
+                list.removeAt(position)
+                notifyItemRemoved(position)
+                onItemDeleted(item)
+            }
+        } else {
+            // Not admin or invalid position
+            if (position in list.indices) {
+                notifyItemChanged(position)
+            }
         }
     }
 
     fun getItemAt(position: Int): KumbungData? {
         return list.getOrNull(position)
+    }
+
+    // Add method to update device IDs
+    fun setDeviceId(name: String, deviceId: String) {
+        deviceIds[name] = deviceId
     }
 }
