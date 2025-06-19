@@ -228,6 +228,138 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Add Chart Section -->
+            <TextView
+                android:id="@+id/tv_chart_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Grafik Sensor"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/cardMediaTanam" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_chart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_chart_title">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <!-- Tab layout for selecting chart type -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tab_temperature"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@color/blue_primary"
+                            android:gravity="center"
+                            android:paddingVertical="8dp"
+                            android:text="Suhu"
+                            android:textColor="@color/white"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tab_humidity"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@color/light_blue"
+                            android:gravity="center"
+                            android:paddingVertical="8dp"
+                            android:text="Kelembapan"
+                            android:textColor="@color/white"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Chart container -->
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/line_chart"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:layout_margin="8dp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- History Sensor -->
+            <TextView
+                android:id="@+id/tv_history_sensor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Histori Sensor"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/card_chart" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_history"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/light_blue"
+                app:cardCornerRadius="12dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_history_sensor"
+                app:layout_constraintVertical_bias="0.0">
+
+                <!-- Inside History Sensor LinearLayout -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:id="@+id/history_items_container">
+
+                    <!-- Header (Keep this) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/blue_primary"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Sensor"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Waktu"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Dynamic notification items will be added here -->
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- Action Buttons -->
             <LinearLayout
                 android:id="@+id/actionButtonsLayout"
@@ -235,7 +367,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40dp"
                 android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@id/cardMediaTanam"
+                app:layout_constraintTop_toBottomOf="@id/card_history"
                 tools:layout_editor_absoluteX="16dp">
 
                 <Button

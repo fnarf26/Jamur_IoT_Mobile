@@ -2,16 +2,24 @@ package com.fendi.jamuriot
 
 import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import com.fendi.jamuriot.databinding.ActivityDetailKumbungBinding
+import com.fendi.jamuriot.model.SensorHistoryData
 import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.components.Description
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.data.Entry
+import androidx.core.content.ContextCompat
 
 class DetailKumbungActivity : AppCompatActivity() {
 
@@ -23,6 +31,10 @@ class DetailKumbungActivity : AppCompatActivity() {
     // Default threshold values (used if settings not available)
     private var batasSuhu: Int = 33
     private var batasKelembapan: Int = 50
+
+    private lateinit var lineChart: LineChart
+    private var showingTemperatureChart = true  // true = temperature, false = humidity
+    private val historyItems = mutableListOf<SensorHistoryData>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,14 +57,19 @@ class DetailKumbungActivity : AppCompatActivity() {
         val prefs = this.getSharedPreferences("user", Context.MODE_PRIVATE)
         val userRole = prefs.getString("role", "petugas") ?: "petugas"
 
-        // Control IMEI input section visibility based on role
+        // Control visibility based on role
         if (userRole == "admin") {
             binding.btnEditName.visibility = View.GONE
             binding.btnEditMedia.visibility = View.GONE
             binding.btnPanen.visibility = View.GONE
         }
+        
         // Load settings first
         loadSettings()
+        
+        // Initialize chart
+        lineChart = binding.lineChart
+        setupChart()
         
         // Set up button listeners
         binding.btnBack.setOnClickListener {
@@ -117,6 +134,22 @@ class DetailKumbungActivity : AppCompatActivity() {
         
         binding.btnEditMedia.setOnClickListener {
             showEditMediaDialog()
+        }
+        
+        // Load sensor history
+        loadSensorHistory()
+        
+        // Set up chart tabs
+        binding.tabTemperature.setOnClickListener {
+            showingTemperatureChart = true
+            updateTabsUI()
+            updateChart()
+        }
+        
+        binding.tabHumidity.setOnClickListener {
+            showingTemperatureChart = false
+            updateTabsUI()
+            updateChart()
         }
     }
     
@@ -207,7 +240,7 @@ class DetailKumbungActivity : AppCompatActivity() {
                     binding.includeAverage.tvStatusWarning.visibility = View.VISIBLE
                 }
                 
-                // Update panen status text (this would be more dynamic in a real app)
+                // Update panen status text
                 binding.tvPanenStatus.text = "BERHASIL PANEN $harvestCount KALI"
                 
                 // Update media tanam with actual media count
@@ -218,6 +251,106 @@ class DetailKumbungActivity : AppCompatActivity() {
                 Toast.makeText(this@DetailKumbungActivity, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+    
+    private fun loadSensorHistory() {
+        val riwayatRef = dbRef.child("riwayat")
+        
+        riwayatRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Clear existing history items
+                val historyContainer = binding.historyItemsContainer
+                
+                // Keep only the header row (first child)
+                val headerView = historyContainer.getChildAt(0)
+                historyContainer.removeAllViews()
+                historyContainer.addView(headerView)
+                
+                // Clear history items list
+                historyItems.clear()
+                
+                if (!snapshot.exists() || snapshot.childrenCount.toInt() == 0) {
+                    // Add empty state message
+                    addEmptyHistoryMessage(historyContainer)
+                    return
+                }
+
+                // Convert to history items and sort by timestamp (newest first)
+                for (historySnapshot in snapshot.children) {
+                    val sensorData = historySnapshot.child("sensor").getValue(String::class.java) ?: ""
+                    val timestamp = historySnapshot.child("timestamp").getValue(String::class.java) ?: ""
+                    
+                    historyItems.add(SensorHistoryData(sensorData, timestamp))
+                }
+                
+                // Sort by timestamp (newest first)
+                historyItems.sortByDescending { parseTimestamp(it.timestamp) }
+                
+                // Limit to 15 items for both chart and list display
+                val limitedItems = if (historyItems.size > 15) {
+                    historyItems.take(15)
+                } else {
+                    historyItems
+                }
+                
+                // Add history items to container
+                for (history in limitedItems) {
+                    addHistoryItem(historyContainer, history)
+                }
+                
+                // Update the chart with new data
+                updateChart()
+            }
+            
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(
+                    this@DetailKumbungActivity, 
+                    "Gagal memuat riwayat: ${error.message}", 
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+    }
+    
+    private fun addHistoryItem(container: LinearLayout, history: SensorHistoryData) {
+        val inflater = LayoutInflater.from(this)
+        val historyView = inflater.inflate(R.layout.item_history_sensor, container, false)
+        
+        val messageTextView = historyView.findViewById<TextView>(R.id.tv_notification_message)
+        val timestampTextView = historyView.findViewById<TextView>(R.id.tv_notification_timestamp)
+        
+        messageTextView.text = history.sensor
+        timestampTextView.text = formatDateTime(history.timestamp)
+        
+        // Add alternating background colors for better readability
+        if (container.childCount % 2 == 0) {
+            historyView.setBackgroundResource(R.color.light_blue_card)
+        } else {
+            historyView.setBackgroundResource(R.color.white)
+        }
+        
+        container.addView(historyView)
+    }
+    
+    private fun addEmptyHistoryMessage(container: LinearLayout) {
+        val emptyView = TextView(this)
+        emptyView.text = "Belum ada riwayat sensor"
+        emptyView.textSize = 14f
+        emptyView.setPadding(32, 32, 32, 32)
+        emptyView.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        container.addView(emptyView)
+    }
+    
+    private fun parseTimestamp(timestamp: String): Date {
+        return try {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            dateFormat.parse(timestamp) ?: Date(0)
+        } catch (e: Exception) {
+            Date(0)
+        }
     }
     
     private fun formatDateTime(dateTimeStr: String): String {
@@ -299,5 +432,113 @@ class DetailKumbungActivity : AppCompatActivity() {
             .addOnFailureListener {
                 Toast.makeText(this, "Gagal menghapus kumbung", Toast.LENGTH_SHORT).show()
             }
+    }
+    
+    private fun setupChart() {
+        // Basic chart setup
+        with(lineChart) {
+            description.isEnabled = false  // Hide description text
+            legend.isEnabled = true        // Show legend
+            setTouchEnabled(true)
+            setDrawGridBackground(false)
+            
+            // Enable scaling and dragging
+            isDragEnabled = true
+            setScaleEnabled(true)
+            setPinchZoom(true)
+            
+            // X-axis settings
+            xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+            xAxis.setDrawGridLines(false)
+            xAxis.granularity = 1f
+            xAxis.labelRotationAngle = -45f
+            
+            // Left Y-axis settings (for values)
+            axisLeft.setDrawGridLines(true)
+            
+            // Right Y-axis settings (hide)
+            axisRight.isEnabled = false
+            
+            // Animation
+            animateX(1000)
+        }
+    }
+    
+    private fun updateTabsUI() {
+        if (showingTemperatureChart) {
+            binding.tabTemperature.setBackgroundResource(R.color.blue_primary)
+            binding.tabHumidity.setBackgroundResource(R.color.light_blue)
+        } else {
+            binding.tabTemperature.setBackgroundResource(R.color.light_blue)
+            binding.tabHumidity.setBackgroundResource(R.color.blue_primary)
+        }
+    }
+
+    private fun updateChart() {
+        if (historyItems.isEmpty()) return
+        
+        // Create entries for the chart
+        val entries = ArrayList<Entry>()
+        
+        // Get reversed items to show oldest first on X-axis
+        val reversedItems = historyItems.reversed()
+        
+        // Add data points - we're taking up to 15 items
+        for (i in reversedItems.indices) {
+            val value = if (showingTemperatureChart) {
+                reversedItems[i].temperature
+            } else {
+                reversedItems[i].humidity
+            }
+            entries.add(Entry(i.toFloat(), value))
+        }
+        
+        // Create dataset
+        val dataSet = LineDataSet(entries, if (showingTemperatureChart) "Suhu (°C)" else "Kelembapan (%)")
+        
+        // Style the dataset
+        dataSet.color = if (showingTemperatureChart) 
+            ContextCompat.getColor(this, R.color.temperature_color) 
+        else 
+            ContextCompat.getColor(this, R.color.humidity_color)
+        dataSet.setCircleColor(dataSet.color)
+        dataSet.lineWidth = 2f
+        dataSet.circleRadius = 4f
+        dataSet.setDrawCircleHole(false)
+        dataSet.valueTextSize = 10f
+        dataSet.setDrawFilled(true)
+        dataSet.fillColor = dataSet.color
+        dataSet.fillAlpha = 50
+        
+        // Create line data and set to chart
+        val lineData = LineData(dataSet)
+        lineChart.data = lineData
+        
+        // Set X-axis labels to timestamps
+        lineChart.xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                val index = value.toInt()
+                if (index >= 0 && index < reversedItems.size) {
+                    // Return short time format
+                    val timestamp = reversedItems[index].timestamp
+                    return formatShortTime(timestamp)
+                }
+                return ""
+            }
+        }
+        
+        // Refresh chart
+        lineChart.invalidate()
+    }
+
+    private fun formatShortTime(timestamp: String): String {
+        try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val date = inputFormat.parse(timestamp) ?: return ""
+            return outputFormat.format(date)
+        } catch (e: Exception) {
+            return ""
+        }
     }
 }
