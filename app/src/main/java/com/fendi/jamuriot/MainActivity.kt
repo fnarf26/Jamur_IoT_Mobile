@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
         setContentView(b.root)
         
         // Get user role from SharedPreferences
-        val prefs = getSharedPreferences("user", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("users", Context.MODE_PRIVATE)
         userRole = prefs.getString("role", "admin") ?: "admin"
         
         // Setup FCM topic subscriptions based on role

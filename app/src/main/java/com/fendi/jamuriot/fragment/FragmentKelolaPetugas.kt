@@ -69,41 +69,6 @@ class FragmentKelolaPetugas : Fragment() {
         b.rvStaffList.adapter = adapter
     }
 
-    private fun hapusPetugas(email: String) {
-        // Show confirmation dialog
-        AlertDialog.Builder(requireContext())
-            .setTitle("Hapus Petugas")
-            .setMessage("Yakin ingin menghapus petugas ini?")
-            .setPositiveButton("Ya") { _, _ ->
-
-                // Delete via API
-                ApiClient.apiService.deletePetugas(email).enqueue(object : Callback<ApiResponse> {
-                    override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
-                        if (response.isSuccessful) {
-                            // Delete from local Firestore
-                            firestore.collection("users").document(email).delete()
-                                .addOnSuccessListener {
-                                    Toast.makeText(requireContext(), "Petugas berhasil dihapus", Toast.LENGTH_SHORT).show()
-                                    loadPetugas() // Refresh list
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(requireContext(), "Gagal menghapus data lokal: ${e.message}", Toast.LENGTH_SHORT).show()
-                                    loadPetugas() // Still refresh since API was successful
-                                }
-                        } else {
-                            Toast.makeText(requireContext(), "Gagal menghapus: ${response.message()}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-
-                    override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
-                        Toast.makeText(requireContext(), "Koneksi gagal: ${t.message}", Toast.LENGTH_SHORT).show()
-                    }
-                })
-            }
-            .setNegativeButton("Tidak", null)
-            .show()
-    }
-
     private fun loadPetugas() {
         petugasList.clear()
 
@@ -140,6 +105,41 @@ class FragmentKelolaPetugas : Fragment() {
                 // Show error message
                 Toast.makeText(requireContext(), "Gagal memuat data petugas: ${error.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun hapusPetugas(email: String) {
+        // Show confirmation dialog
+        AlertDialog.Builder(requireContext())
+            .setTitle("Hapus Petugas")
+            .setMessage("Yakin ingin menghapus petugas ini?")
+            .setPositiveButton("Ya") { _, _ ->
+
+                // Delete via API
+                ApiClient.apiService.deletePetugas(email).enqueue(object : Callback<ApiResponse> {
+                    override fun onResponse(call: Call<ApiResponse>, response: Response<ApiResponse>) {
+                        if (response.isSuccessful) {
+                            // Delete from local Firestore
+                            firestore.collection("users").document(email).delete()
+                                .addOnSuccessListener {
+                                    Toast.makeText(requireContext(), "Petugas berhasil dihapus", Toast.LENGTH_SHORT).show()
+                                    loadPetugas() // Refresh list
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(requireContext(), "Gagal menghapus data lokal: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    loadPetugas() // Still refresh since API was successful
+                                }
+                        } else {
+                            Toast.makeText(requireContext(), "Gagal menghapus: ${response.message()}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ApiResponse>, t: Throwable) {
+                        Toast.makeText(requireContext(), "Koneksi gagal: ${t.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
+            .setNegativeButton("Tidak", null)
+            .show()
     }
 
     override fun onResume() {

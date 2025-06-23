@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,11 @@ import com.fendi.jamuriot.PengaturanThresholdActivity
 import com.fendi.jamuriot.ProfilActivity
 import com.fendi.jamuriot.databinding.FragmentPengaturanBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 class FragmentPengaturan : Fragment() {
     private lateinit var b: FragmentPengaturanBinding
@@ -56,10 +62,7 @@ class FragmentPengaturan : Fragment() {
                 .setTitle("Konfirmasi Logout")
                 .setMessage("Apakah Anda yakin ingin logout?")
                 .setPositiveButton("Ya") { dialog, _ ->
-                    FirebaseAuth.getInstance().signOut()
-                    prefs.edit().clear().apply()
-                    startActivity(Intent(thisParent, LoginActivity::class.java))
-                    thisParent.finish()
+                    logout() // gunakan fungsi logout yang telah Anda buat
                 }
                 .setNegativeButton("Batal") { dialog, _ ->
                     dialog.dismiss()
@@ -69,4 +72,49 @@ class FragmentPengaturan : Fragment() {
 
         return b.root
     }
+
+    fun logout() {
+        // Hapus session login dari SharedPreferences
+        val prefs = thisParent.getSharedPreferences("users", Context.MODE_PRIVATE)
+        val role = prefs.getString("role", "") ?: ""
+        val assignedKumbungs = prefs.getString("assigned_kumbungs", "") ?: ""
+
+        // Unsubscribe dari topik-topik FCM berdasarkan role
+        FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
+
+        if (role == "admin") {
+            // Unsubscribe dari semua device_<id>
+            val dbRef = FirebaseDatabase.getInstance().getReference("devices")
+            dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (deviceSnapshot in snapshot.children) {
+                        val deviceId = deviceSnapshot.key ?: continue
+                        val topic = "device_$deviceId"
+                        FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("Logout", "Error unsubscribing: ${error.message}")
+                }
+            })
+        } else if (role == "petugas") {
+            // Unsubscribe dari kumbung_<id> yang disimpan
+            val kumbungList = assignedKumbungs.split(",")
+            kumbungList.forEach { kumbungId ->
+                val topic = "kumbung_${kumbungId.trim()}"
+                FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+            }
+        }
+
+        // Hapus semua SharedPreferences
+        prefs.edit().clear().apply()
+
+        // Arahkan ke halaman login atau keluar dari aplikasi
+        val intent = Intent(thisParent, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        thisParent.finish()
+    }
+
 }

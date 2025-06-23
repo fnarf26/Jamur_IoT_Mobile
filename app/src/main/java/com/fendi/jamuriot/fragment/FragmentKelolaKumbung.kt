@@ -124,6 +124,28 @@ class FragmentKelolaKumbung : Fragment() {
         return b.root
     }
 
+
+    private fun loadRegisteredDevices() {
+        // Get user info from SharedPreferences
+        val prefs = thisParent.getSharedPreferences("user", Context.MODE_PRIVATE)
+        val userRole = prefs.getString("role", "petugas") ?: "petugas"
+        val email = prefs.getString("email", "") ?: ""
+        val isAdmin = userRole == "admin"
+
+        Log.d("KelolaKumbung", "Loading devices for role: $userRole, email: $email")
+
+        // Clear previous list
+        kumbungList.clear()
+
+        if (isAdmin) {
+            // Admin can see all registered devices
+            loadAllDevices(isAdmin)
+        } else {
+            // Petugas can only see assigned devices
+            loadPetugasDevices(email, isAdmin)
+        }
+    }
+
     private fun showRegisterDialog(imei: String) {
         val input = EditText(thisParent)
         input.hint = "Nama perangkat"
@@ -155,26 +177,6 @@ class FragmentKelolaKumbung : Fragment() {
             .show()
     }
 
-    private fun loadRegisteredDevices() {
-        // Get user info from SharedPreferences
-        val prefs = thisParent.getSharedPreferences("user", Context.MODE_PRIVATE)
-        val userRole = prefs.getString("role", "petugas") ?: "petugas"
-        val email = prefs.getString("email", "") ?: ""
-        val isAdmin = userRole == "admin"
-
-        Log.d("KelolaKumbung", "Loading devices for role: $userRole, email: $email")
-
-        // Clear previous list
-        kumbungList.clear()
-
-        if (isAdmin) {
-            // Admin can see all registered devices
-            loadAllDevices(isAdmin)
-        } else {
-            // Petugas can only see assigned devices
-            loadPetugasDevices(email, isAdmin)
-        }
-    }
 
     private fun loadAllDevices(isAdmin: Boolean) {
         dbRef.addValueEventListener(object : ValueEventListener {
