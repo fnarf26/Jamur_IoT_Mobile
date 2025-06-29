@@ -18,39 +18,39 @@
 
     </FrameLayout>
 
-<!--     <com.google.android.material.bottomnavigation.BottomNavigationView-->
-<!--        android:id="@+id/bottomNavigationView"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:background="#11312E"-->
-<!--        app:itemIconTint="@color/white"-->
-<!--        app:itemTextColor="#FFFFFF"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:menu="@menu/bottom_navigration_menu"/>-->
+    <!--     <com.google.android.material.bottomnavigation.BottomNavigationView-->
+    <!--        android:id="@+id/bottomNavigationView"-->
+    <!--        android:layout_width="0dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:background="#11312E"-->
+    <!--        app:itemIconTint="@color/white"-->
+    <!--        app:itemTextColor="#FFFFFF"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:menu="@menu/bottom_navigration_menu"/>-->
 
 
-<!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
-<!--        android:id="@+id/bottomNavigationView"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="70dp"-->
-<!--        android:background="@color/blue_primary"-->
+    <!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
+    <!--        android:id="@+id/bottomNavigationView"-->
+    <!--        android:layout_width="0dp"-->
+    <!--        android:layout_height="70dp"-->
+    <!--        android:background="@color/blue_primary"-->
 
-<!--        app:elevation="0dp"-->
-<!--        app:itemIconTint="@color/nav_item_color"-->
-<!--        app:itemTextColor="@color/nav_item_color"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@+id/frameLayout"-->
-<!--        app:menu="@menu/bottom_navigration_menu" />-->
+    <!--        app:elevation="0dp"-->
+    <!--        app:itemIconTint="@color/nav_item_color"-->
+    <!--        app:itemTextColor="@color/nav_item_color"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/frameLayout"-->
+    <!--        app:menu="@menu/bottom_navigration_menu" />-->
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="70dp"
-        android:background="@color/blue_primary"
+        android:background="#0076D7"
 
         app:elevation="0dp"
         app:itemActiveIndicatorStyle="@android:style/Theme.Black"

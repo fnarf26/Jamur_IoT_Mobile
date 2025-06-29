@@ -1,6 +1,5 @@
 package com.fendi.jamuriot.fragment
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -8,10 +7,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.fendi.jamuriot.LoginActivity
-import com.fendi.jamuriot.MainActivity
 import com.fendi.jamuriot.PengaturanThresholdActivity
 import com.fendi.jamuriot.ProfilActivity
 import com.fendi.jamuriot.databinding.FragmentPengaturanBinding
@@ -24,21 +22,21 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 class FragmentPengaturan : Fragment() {
     private lateinit var b: FragmentPengaturanBinding
-    private lateinit var thisParent: MainActivity
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        thisParent = activity as MainActivity
         b = FragmentPengaturanBinding.inflate(inflater, container, false)
+        auth = FirebaseAuth.getInstance() // Inisialisasi Firebase Auth
 
         // Get shared preferences
-        val prefs = thisParent.getSharedPreferences("user", Context.MODE_PRIVATE)
+        val prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE)
 
         // Check if user has admin role
-        val userRole = prefs.getString("role", "user") ?: "user"
+        val userRole = prefs.getString("role", "petugas") ?: "petugas"
 
         // Only show threshold button for admin users
         if (userRole == "admin") {
@@ -48,72 +46,73 @@ class FragmentPengaturan : Fragment() {
         }
 
         b.btnProfil.setOnClickListener {
-            val intent = Intent(thisParent, ProfilActivity::class.java).apply{}
+            val intent = Intent(requireActivity(), ProfilActivity::class.java)
             startActivity(intent)
         }
 
         b.btnThreshold.setOnClickListener {
-            val intent = Intent(thisParent, PengaturanThresholdActivity::class.java).apply{}
+            val intent = Intent(requireActivity(), PengaturanThresholdActivity::class.java)
             startActivity(intent)
         }
 
         b.btnLogout.setOnClickListener {
-            AlertDialog.Builder(thisParent)
+            AlertDialog.Builder(requireActivity())
                 .setTitle("Konfirmasi Logout")
                 .setMessage("Apakah Anda yakin ingin logout?")
-                .setPositiveButton("Ya") { dialog, _ ->
-                    logout() // gunakan fungsi logout yang telah Anda buat
+                .setPositiveButton("Ya") { _, _ ->
+                    logout()
                 }
-                .setNegativeButton("Batal") { dialog, _ ->
-                    dialog.dismiss()
-                }
+                .setNegativeButton("Batal", null)
                 .show()
         }
 
         return b.root
     }
 
-    fun logout() {
-        val prefs = thisParent.getSharedPreferences("user", Context.MODE_PRIVATE)
+    private fun logout() {
+        // --- PERBAIKAN 1: Gunakan SharedPreferences "user" (tanpa 's') ---
+        val prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE)
         val role = prefs.getString("role", "") ?: ""
-        val email = prefs.getString("email", "") ?: ""
-        val topic = email
-            .replace("@", "_at_")   // ganti @ agar valid
-            .replace(".", "_")      // ganti . agar valid
+        val assignedKumbungs = prefs.getString("assigned_kumbungs", "") ?: ""
 
-
-        // Unsubscribe dari semua topik yang mungkin aktif (baik admin maupun petugas)
+        // Unsubscribe dari topik-topik FCM berdasarkan role
+        // (Logika ini sudah benar, hanya saja role-nya sebelumnya salah)
         FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
-            .addOnCompleteListener {
-                Log.d("Logout", "Unsubscribed from topic all_devices")
-            }
 
-        FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
-            .addOnCompleteListener {
-                Log.d("Logout", "Unsubscribed from topic $topic")
-            }
-
-        // Hapus token FCM untuk memastikan tidak ada notifikasi yang nyasar
-        FirebaseMessaging.getInstance().deleteToken()
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    Log.d("Logout", "FCM token deleted")
-                } else {
-                    Log.w("Logout", "FCM token deletion failed", it.exception)
+        if (role == "admin") {
+            val dbRef = FirebaseDatabase.getInstance().getReference("devices")
+            dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (deviceSnapshot in snapshot.children) {
+                        val deviceId = deviceSnapshot.key ?: continue
+                        val topic = "device_$deviceId"
+                        FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+                    }
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("Logout", "Error unsubscribing admin: ${error.message}")
+                }
+            })
+        } else if (role == "petugas" && assignedKumbungs.isNotEmpty()) {
+            val kumbungList = assignedKumbungs.split(",")
+            kumbungList.forEach { kumbungId ->
+                if (kumbungId.isNotBlank()) {
+                    val topic = "kumbung_${kumbungId.trim()}"
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
                 }
             }
+        }
 
-        // Logout dari Firebase Auth
-        FirebaseAuth.getInstance().signOut()
+        // --- PERBAIKAN 2: Tambahkan signOut dari Firebase Auth ---
+        auth.signOut()
 
-        // Hapus SharedPreferences
+        // Hapus semua data dari SharedPreferences "user"
         prefs.edit().clear().apply()
 
-        // Arahkan ke LoginActivity dan bersihkan task stack
-        val intent = Intent(thisParent, LoginActivity::class.java)
+        // Arahkan ke halaman login dan bersihkan activity stack
+        val intent = Intent(requireActivity(), LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
-        thisParent.finish()
+        requireActivity().finish()
     }
-
 }

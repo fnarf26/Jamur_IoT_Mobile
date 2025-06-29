@@ -10,4 +10,5 @@
     <color name="divider">#BDBDBD</color>
     <color name="temperature_color">#FF5722</color>
     <color name="humidity_color">#2196F3</color>
+    <color name="warning_yellow">#FFC107</color>
 </resources>

@@ -5,9 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="8dp"
-    android:layout_marginBottom="30dp"
     app:cardCornerRadius="24dp"
     app:cardElevation="4dp">
+
+    <!-- PERUBAHAN UTAMA:
+         layout_width dan layout_height dari CardView di atas
+         HARUS match_parent saat digunakan di dalam ViewPager2.
+    -->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -25,16 +29,16 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintWidth_percent="0.5">
 
-            <!-- Suhu -->
+            <!-- Status Online/Offline -->
             <LinearLayout
                 android:id="@+id/layoutStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                app:layout_constraintStart_toStartOf="@+id/ivTemperature"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <View
@@ -53,6 +57,7 @@
                     android:textSize="16sp" />
             </LinearLayout>
 
+            <!-- Timestamp -->
             <TextView
                 android:id="@+id/tvTimestamp"
                 android:layout_width="wrap_content"
@@ -60,16 +65,17 @@
                 android:layout_marginTop="5dp"
                 android:text="12:12 11-12-2024"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="@+id/layoutStatus"
                 app:layout_constraintTop_toBottomOf="@+id/layoutStatus" />
 
+            <!-- Label Suhu -->
             <TextView
                 android:id="@+id/tvSuhuLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="30dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="12dp"
                 android:text="Suhu"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
@@ -77,40 +83,30 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvTimestamp" />
 
+            <!-- Icon Suhu -->
             <ImageView
                 android:id="@+id/ivTemperature"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="7dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
                 android:src="@drawable/ic_temperature"
-                android:tint="@android:color/white"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvSuhuLabel" />
+                app:layout_constraintStart_toStartOf="@+id/tvSuhuLabel"
+                app:layout_constraintTop_toBottomOf="@id/tvSuhuLabel"
+                app:tint="@android:color/white" />
 
+            <!-- Nilai Suhu (akan diisi dari kode, termasuk °C) -->
             <TextView
                 android:id="@+id/tvTemperature"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="30"
+                android:text="30°C"
                 android:textColor="@android:color/white"
-                android:textSize="45sp"
+                android:textSize="38sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/ivTemperature"
                 app:layout_constraintStart_toEndOf="@id/ivTemperature"
                 app:layout_constraintTop_toTopOf="@id/ivTemperature" />
-
-            <TextView
-                android:id="@+id/tvCelcius"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="°C"
-                android:textColor="@android:color/white"
-                android:textSize="40sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toEndOf="@id/tvTemperature"
-                app:layout_constraintTop_toTopOf="@id/tvTemperature" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -118,28 +114,28 @@
             android:id="@+id/layoutRightPanel"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="-1dp"
             android:background="@drawable/blue_gradient_light"
             app:layout_constraintBottom_toBottomOf="@id/layoutLeftPanel"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/layoutLeftPanel"
-            app:layout_constraintTop_toTopOf="@id/layoutLeftPanel"
-            app:layout_constraintWidth_percent="0.5">
+            app:layout_constraintTop_toTopOf="@id/layoutLeftPanel">
 
+            <!-- Info Kumbung (IMEI & Nama) -->
             <LinearLayout
                 android:id="@+id/layoutKumbungInfo"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
                 android:background="@drawable/rounded_white_background"
-                android:paddingStart="24dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="24dp"
-                android:paddingBottom="12dp"
-                app:layout_constraintStart_toStartOf="@+id/ivHumidity"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
-                <!-- IMEI Kumbung -->
+
                 <TextView
                     android:id="@+id/tvLumbungIMEI"
                     android:layout_width="wrap_content"
@@ -148,7 +144,6 @@
                     android:textColor="@android:color/black"
                     android:textSize="14sp" />
 
-                <!-- Nama Kumbung -->
                 <TextView
                     android:id="@+id/tvLumbungName"
                     android:layout_width="wrap_content"
@@ -157,60 +152,50 @@
                     android:textColor="@android:color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
             </LinearLayout>
 
+            <!-- Label Kelembapan -->
             <TextView
                 android:id="@+id/tvKelembapanLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="30dp"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="12dp"
                 android:text="Kelembapan"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/ivHumidity"
                 app:layout_constraintTop_toBottomOf="@+id/layoutKumbungInfo" />
 
+            <!-- Icon Kelembapan -->
             <ImageView
                 android:id="@+id/ivHumidity"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="7dp"
+                android:layout_marginTop="4dp"
                 android:src="@drawable/ic_humidity"
-                android:tint="@android:color/white"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvKelembapanLabel" />
+                app:layout_constraintTop_toBottomOf="@id/tvKelembapanLabel"
+                app:tint="@android:color/white" />
 
+            <!-- Nilai Kelembapan (akan diisi dari kode, termasuk %) -->
             <TextView
                 android:id="@+id/tvHumidity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="75"
+                android:text="75%"
                 android:textColor="@android:color/white"
-                android:textSize="45sp"
+                android:textSize="38sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/ivHumidity"
                 app:layout_constraintStart_toEndOf="@id/ivHumidity"
                 app:layout_constraintTop_toTopOf="@id/ivHumidity" />
 
-            <TextView
-                android:id="@+id/tvPercentage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="%"
-                android:textColor="@android:color/white"
-                android:textSize="40sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toEndOf="@id/tvHumidity"
-                app:layout_constraintTop_toTopOf="@id/tvHumidity" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Detail Button -->
+        <!-- Tombol Detail -->
         <LinearLayout
             android:id="@+id/layoutDetailButton"
             android:layout_width="match_parent"
@@ -243,7 +228,7 @@
                 android:background="@drawable/circle_blue"
                 android:padding="8dp"
                 android:src="@drawable/ic_arrow_righ"
-                android:tint="@android:color/white" />
+                app:tint="@android:color/white" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

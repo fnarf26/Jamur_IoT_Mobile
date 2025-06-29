@@ -1,8 +1,9 @@
 package com.fendi.jamuriot.adapter
 
+import android.graphics.Color
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.fendi.jamuriot.R
 import com.fendi.jamuriot.databinding.ItemKumbungMonitoringBinding
@@ -15,6 +16,9 @@ class KumbungMonitoringAdapter(
     private val deviceIds: MutableMap<String, String> = mutableMapOf(),
     private val onDetailClickListener: (String) -> Unit
 ) : RecyclerView.Adapter<KumbungMonitoringAdapter.KumbungViewHolder>() {
+
+    private var tempThreshold: Float = 100f
+    private var humidityThreshold: Float = 0f // Default diubah agar tidak salah picu
 
     inner class KumbungViewHolder(val binding: ItemKumbungMonitoringBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -45,20 +49,40 @@ class KumbungMonitoringAdapter(
         with(holder.binding) {
             tvLumbungIMEI.text = data.imei
             tvLumbungName.text = data.name
-            tvTemperature.text = data.temperatureAverage.toInt().toString()
-            tvHumidity.text = data.humidityAverage.toInt().toString()
             tvTimestamp.text = lastUpdateText
+
+            tvTemperature.text = "${data.temperatureAverage.toInt()}°C"
+            tvHumidity.text = "${data.humidityAverage.toInt()}%"
 
             val lastUpdateMillis = date?.time ?: 0L
             val currentTime = System.currentTimeMillis()
-            val isOnline = currentTime - lastUpdateMillis < 60_000 // 1 minute threshold
+            val isOnline = currentTime - lastUpdateMillis < 60_000
 
             tvStatus.text = if (isOnline) "Online" else "Offline"
             viewStatusIndicator.setBackgroundResource(
                 if (isOnline) R.drawable.circle_green else R.drawable.circle_red
             )
 
-            // Set click listener for detail button
+            val context = holder.itemView.context
+            val yellowColor = ContextCompat.getColor(context, R.color.warning_yellow)
+            val defaultColor = Color.WHITE
+
+            // Peringatan untuk SUHU (jika di atas atau sama dengan batas)
+            if (data.temperatureAverage >= tempThreshold) {
+                tvTemperature.setTextColor(yellowColor)
+            } else {
+                tvTemperature.setTextColor(defaultColor)
+            }
+
+            // --- PERUBAHAN LOGIKA DI SINI ---
+            // Peringatan untuk KELEMBAPAN (jika di bawah atau sama dengan batas)
+            if (data.humidityAverage <= humidityThreshold) {
+                tvHumidity.setTextColor(yellowColor)
+            } else {
+                tvHumidity.setTextColor(defaultColor)
+            }
+            // --- AKHIR PERUBAHAN ---
+
             layoutDetailButton.setOnClickListener {
                 deviceIds[data.name]?.let { deviceId ->
                     onDetailClickListener(deviceId)
@@ -69,7 +93,12 @@ class KumbungMonitoringAdapter(
 
     override fun getItemCount(): Int = kumbungList.size
 
-    // Add this method to KumbungMonitoringAdapter.kt
+    fun setThresholds(temp: Float, humidity: Float) {
+        this.tempThreshold = temp
+        this.humidityThreshold = humidity
+        notifyDataSetChanged()
+    }
+
     fun clearDeviceIdMappings() {
         deviceIds.clear()
     }
