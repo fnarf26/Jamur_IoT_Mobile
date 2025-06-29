@@ -77,27 +77,43 @@ class FragmentPengaturan : Fragment() {
         val prefs = thisParent.getSharedPreferences("user", Context.MODE_PRIVATE)
         val role = prefs.getString("role", "") ?: ""
         val email = prefs.getString("email", "") ?: ""
+        val topic = email
+            .replace("@", "_at_")   // ganti @ agar valid
+            .replace(".", "_")      // ganti . agar valid
 
-        // Unsubscribe FCM topic berdasarkan role
-        if (role == "admin") {
-            FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
-        } else if (role == "petugas") {
-            val topic = email.replace(".", ",")
-            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
-        }
 
-        // 🔐 Logout dari Firebase Authentication
+        // Unsubscribe dari semua topik yang mungkin aktif (baik admin maupun petugas)
+        FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
+            .addOnCompleteListener {
+                Log.d("Logout", "Unsubscribed from topic all_devices")
+            }
+
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+            .addOnCompleteListener {
+                Log.d("Logout", "Unsubscribed from topic $topic")
+            }
+
+        // Hapus token FCM untuk memastikan tidak ada notifikasi yang nyasar
+        FirebaseMessaging.getInstance().deleteToken()
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    Log.d("Logout", "FCM token deleted")
+                } else {
+                    Log.w("Logout", "FCM token deletion failed", it.exception)
+                }
+            }
+
+        // Logout dari Firebase Auth
         FirebaseAuth.getInstance().signOut()
 
         // Hapus SharedPreferences
         prefs.edit().clear().apply()
 
-        // Pindah ke LoginActivity dan bersihkan task stack
+        // Arahkan ke LoginActivity dan bersihkan task stack
         val intent = Intent(thisParent, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         thisParent.finish()
     }
-
 
 }

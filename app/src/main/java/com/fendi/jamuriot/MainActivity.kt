@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
         setContentView(b.root)
         
         // Get user role from SharedPreferences
-        val prefs = getSharedPreferences("users", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("user", Context.MODE_PRIVATE)
         userRole = prefs.getString("role", "admin") ?: "admin"
         
         // Setup FCM topic subscriptions based on role
@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         Log.d(TAG, "Admin successfully subscribed to all_devices topic")
+                        Log.d(TAG, "topic : all_devices")
                     } else {
                         Log.e(TAG, "Failed to subscribe to all_devices topic", task.exception)
                     }
@@ -93,12 +94,15 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
             // Petugas should only subscribe to their assigned kumbung topics
             val email =
                 getSharedPreferences("user", Context.MODE_PRIVATE).getString("email", "") ?: ""
-            val topic = email.replace(".", ",")
+            val topic = email
+                .replace("@", "_at_")   // ganti @ agar valid
+                .replace(".", "_")      // ganti . agar valid
 
             FirebaseMessaging.getInstance().subscribeToTopic(topic)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         Log.d(TAG, "Petugas successfully subscribed to email topic")
+                        Log.d(TAG, "topic : ${topic}")
                     } else {
                         Log.e(TAG, "Failed to subscribe to email topic", task.exception)
                     }
