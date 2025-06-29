@@ -88,78 +88,21 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
                         Log.e(TAG, "Failed to subscribe to all_devices topic", task.exception)
                     }
                 }
-                
-            // Additionally, subscribe admin to all registered device topics
-            subscribeAdminToAllDevices()
-            
+
         } else if (userRole == "petugas") {
             // Petugas should only subscribe to their assigned kumbung topics
-            val email = getSharedPreferences("user", Context.MODE_PRIVATE).getString("email", "") ?: ""
-            
-            // First get assigned kumbungs from Firestore
-            FirebaseFirestore.getInstance().collection("users").document(email).get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        // Get the assigned kumbung IDs
-                        @Suppress("UNCHECKED_CAST")
-                        val assignedKumbungs = document.get("kumbung") as? List<String> ?: emptyList()
-                        Log.d(TAG, "Found ${assignedKumbungs.size} assigned kumbungs for petugas: $assignedKumbungs")
-                        
-                        // Subscribe to each assigned kumbung's topic
-                        assignedKumbungs.forEach { kumbungId ->
-                            val topic = "kumbung_$kumbungId"
-                            FirebaseMessaging.getInstance().subscribeToTopic(topic)
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        Log.d(TAG, "Petugas successfully subscribed to $topic")
-                                    } else {
-                                        Log.e(TAG, "Failed to subscribe to $topic", task.exception)
-                                    }
-                                }
-                        }
-                        
-                        // Save assigned kumbungs to SharedPreferences for future reference
-                        getSharedPreferences("user", Context.MODE_PRIVATE).edit()
-                            .putString("assigned_kumbungs", assignedKumbungs.joinToString(","))
-                            .apply()
+            val email =
+                getSharedPreferences("user", Context.MODE_PRIVATE).getString("email", "") ?: ""
+
+            FirebaseMessaging.getInstance().subscribeToTopic(email)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d(TAG, "Petugas successfully subscribed to email topic")
                     } else {
-                        Log.d(TAG, "No user document found for email: $email")
+                        Log.e(TAG, "Failed to subscribe to email topic", task.exception)
                     }
-                }
-                .addOnFailureListener { e ->
-                    Log.e(TAG, "Error fetching assigned kumbungs", e)
                 }
         }
-    }
-    
-    private fun subscribeAdminToAllDevices() {
-        // Get reference to all registered devices in Firebase Realtime Database
-        val dbRef = FirebaseDatabase.getInstance().getReference("devices")
-        
-        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                for (deviceSnapshot in snapshot.children) {
-                    val deviceId = deviceSnapshot.key ?: continue
-                    val isRegistered = deviceSnapshot.child("register").getValue(Boolean::class.java) ?: false
-                    
-                    if (isRegistered) {
-                        val topic = "device_$deviceId"
-                        FirebaseMessaging.getInstance().subscribeToTopic(topic)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Log.d(TAG, "Admin successfully subscribed to $topic")
-                                } else {
-                                    Log.e(TAG, "Failed to subscribe to $topic", task.exception)
-                                }
-                            }
-                    }
-                }
-            }
-            
-            override fun onCancelled(error: DatabaseError) {
-                Log.e(TAG, "Error loading device data: ${error.message}")
-            }
-        })
     }
     
     private fun setupNavigation() {

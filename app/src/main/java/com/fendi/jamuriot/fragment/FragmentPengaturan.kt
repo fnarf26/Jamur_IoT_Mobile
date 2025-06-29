@@ -36,10 +36,10 @@ class FragmentPengaturan : Fragment() {
 
         // Get shared preferences
         val prefs = thisParent.getSharedPreferences("user", Context.MODE_PRIVATE)
-        
+
         // Check if user has admin role
         val userRole = prefs.getString("role", "user") ?: "user"
-        
+
         // Only show threshold button for admin users
         if (userRole == "admin") {
             b.btnThreshold.visibility = View.VISIBLE
@@ -74,43 +74,25 @@ class FragmentPengaturan : Fragment() {
     }
 
     fun logout() {
-        // Hapus session login dari SharedPreferences
-        val prefs = thisParent.getSharedPreferences("users", Context.MODE_PRIVATE)
+        val prefs = thisParent.getSharedPreferences("user", Context.MODE_PRIVATE)
         val role = prefs.getString("role", "") ?: ""
-        val assignedKumbungs = prefs.getString("assigned_kumbungs", "") ?: ""
+        val email = prefs.getString("email", "") ?: ""
 
-        // Unsubscribe dari topik-topik FCM berdasarkan role
-        FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
-
+        // Unsubscribe FCM topic berdasarkan role
         if (role == "admin") {
-            // Unsubscribe dari semua device_<id>
-            val dbRef = FirebaseDatabase.getInstance().getReference("devices")
-            dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    for (deviceSnapshot in snapshot.children) {
-                        val deviceId = deviceSnapshot.key ?: continue
-                        val topic = "device_$deviceId"
-                        FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("Logout", "Error unsubscribing: ${error.message}")
-                }
-            })
+            FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
         } else if (role == "petugas") {
-            // Unsubscribe dari kumbung_<id> yang disimpan
-            val kumbungList = assignedKumbungs.split(",")
-            kumbungList.forEach { kumbungId ->
-                val topic = "kumbung_${kumbungId.trim()}"
-                FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
-            }
+            val topic = email.replace(".", ",")
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
         }
 
-        // Hapus semua SharedPreferences
+        // 🔐 Logout dari Firebase Authentication
+        FirebaseAuth.getInstance().signOut()
+
+        // Hapus SharedPreferences
         prefs.edit().clear().apply()
 
-        // Arahkan ke halaman login atau keluar dari aplikasi
+        // Pindah ke LoginActivity dan bersihkan task stack
         val intent = Intent(thisParent, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
