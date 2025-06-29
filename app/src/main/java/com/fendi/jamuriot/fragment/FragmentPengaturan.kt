@@ -82,8 +82,7 @@ class FragmentPengaturan : Fragment() {
         if (role == "admin") {
             FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
         } else if (role == "petugas") {
-            val topic = email.replace(".", ",")
-            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(email)
         }
 
         // 🔐 Logout dari Firebase Authentication
