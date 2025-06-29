@@ -82,7 +82,8 @@ class FragmentPengaturan : Fragment() {
         if (role == "admin") {
             FirebaseMessaging.getInstance().unsubscribeFromTopic("all_devices")
         } else if (role == "petugas") {
-            FirebaseMessaging.getInstance().unsubscribeFromTopic(email)
+            val topic = email.replace(".", ",")
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
         }
 
         // 🔐 Logout dari Firebase Authentication
@@ -97,5 +98,6 @@ class FragmentPengaturan : Fragment() {
         startActivity(intent)
         thisParent.finish()
     }
+
 
 }

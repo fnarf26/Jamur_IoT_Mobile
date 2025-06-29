@@ -93,8 +93,9 @@ class MainActivity : AppCompatActivity(), NavigationBarView.OnItemSelectedListen
             // Petugas should only subscribe to their assigned kumbung topics
             val email =
                 getSharedPreferences("user", Context.MODE_PRIVATE).getString("email", "") ?: ""
+            val topic = email.replace(".", ",")
 
-            FirebaseMessaging.getInstance().subscribeToTopic(email)
+            FirebaseMessaging.getInstance().subscribeToTopic(topic)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         Log.d(TAG, "Petugas successfully subscribed to email topic")
